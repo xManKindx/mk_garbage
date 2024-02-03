@@ -8,26 +8,25 @@ Config.CollectionMin = 2 --minimum bags at each dumpster
 Config.CollectionMax = 5 --max bags at each dumpster 
 Config.CollectionMultiplier = 2 --add this many bags per extra worker 
 
-Config.ConsoleLogging = true --TRUE DISPLAYS SCRIPT LOGGING INFO IN F8 AND SERVER CONSOLE
-
 Config.TrashTruck = 'trash2' --spawn code for your desired trash truck
 
-Config.SetFuel = function(Vehicle)
-    ---@param Vehicle number Vehicle entity id
-
+---@param vehicle number Vehicle entity id
+Config.SetFuel = function(vehicle)
     if GetResourceState('LegacyFuel') == 'started' then
-        exports['LegacyFuel']:SetFuel(Vehicle, 100)
+        exports['LegacyFuel']:SetFuel(vehicle, 100)
     elseif GetResourceState('ox_fuel') == 'started' then 
-        Entity(Vehicle).state:set('fuel', 100, true)
+        Entity(vehicle).state:set('fuel', 100, true)
+    elseif GetResourceState('cdn-fuel') == 'started' then 
+        exports['cdn-fuel']:SetFuel(vehicle, 100)
     else
         --add fuel resource here
     end
 end
 
-Config.GiveKeys = function(Vehicle, Plate)
-    ---@param Vehicle number Vehicle entity id
-    ---@param Plate string Vehicle plate text
-    --script automatically gives keys if using mk_vehiclekeys or qb-vehiclekeys (not needed here)
+---@param vehicle number Vehicle entity id
+---@param plate string Vehicle plate text
+--script automatically gives keys if using mk_vehiclekeys or qb-vehiclekeys (not needed here)
+Config.GiveKeys = function(vehicle, plate)
 
 end
 
@@ -151,64 +150,6 @@ Config.Stops = { --coordinates of dumpsters and their models for route calculati
     {Coords = {x = 437.6037902832, y = -1061.3695068359, z = 28.200622558594}, Model = 666561306},
     {Coords = {x = 932.04577636719, y = -1570.0302734375, z = 29.513746261597}, Model = -58485588},
     {Coords = {x = 972.50347900391, y = -1830.9273681641, z = 30.28978729248}, Model = 666561306},
-}
-
-------------------------------------------------------NOTIFICATIONS-----------------------------------------------------------
-Config.Notify = { 
-    UseCustom = false, --FALSE = DEFAULT NOTIFY WILL BE YOUR FRAMEWORKS NOTIFY SYSTEM (QBCore:Notify / esx:showNotification) / TRUE = CUSTOM NOTIFY SCRIPT (OX_LIB / T-NOTIFY / ECT) (VIEW README FILE FOR DETAILED SETUP INFO)
-    CustomClientNotifyFunction = function(Data) --**CLIENT SIDE CODE**
-        ---@param Data table: { Message string, Type string (error, success, primary), Duration number }
-        
-        --TriggerEvent('QBCore:Notify', Data.Message, Data.Type, Data.Duration) --QBCORE EXAMPLE
-    end,
-    CustomServerNotifyFunction = function(PlayerSource, Data) --**SERVER SIDE CODE** SAME AS ABOVE EXCEPT PASSES THE SOURCE TO SEND THE NOTIFICATION TO FROM THE SERVER
-        ---@param PlayerSource number Server id of the player
-        ---@param Data table: { Message string, Type string (error, success, primary), Duration number }
-
-        --TriggerClientEvent('QBCore:Notify', PlayerSource, Data.Message, Data.Type, Data.Duration) --QBCORE EXAMPLE
-    end,
-}
-
-------------------------------------------------------LOGS--------------------------------------------------------------------
-Config.Logs = {
-    WebHook = '', --Discord webhook
-    CompletedRun = function(PlayerSource, PlayerIdentifier, CashAwarded, ItemsRewarded)
-        ---@param PlayerSource number Player server id
-        ---@param PlayerIdentifier string Player identifier (citizen id for qb / identifier for esx)
-        ---@param CashAwarded number Cash given to player
-        ---@param ItemRewarded table: { [item string]: amount number }
-        --Player completed the garbage run
-
-        local rewards
-        local next = next
-        if ItemsRewarded and next(ItemsRewarded) ~= nil then
-            for key, value in pairs(ItemsRewarded) do 
-                if not rewards then 
-                    rewards = '['..value..'] '..key 
-                else
-                    rewards = rewards..', ['..value..'] '..key
-                end
-            end
-        end
-        local logString = '**(Player: '..PlayerIdentifier..' | ID: '..PlayerSource..')** Completed a garbage route. Received $'..Utils:FormatThousand(CashAwarded)..(rewards and ', '..rewards or '')
-        Utils:DiscordLog(Config.Logs.WebHook, 'Garbage Run Completed', 5763719, logString)
-    end,
-    NoWork = function(PlayerSource, PlayerIdentifier)
-        ---@param PlayerSource number Player server id
-        ---@param PlayerIdentifier string Player identifier (citizen id for qb / identifier for esx)
-        --Player completed the run but did not drive the truck or turn in any bags (was not paid)
-
-        local logString = '**(Player: '..PlayerIdentifier..' | ID: '..PlayerSource..')** Completed a garbage route without doing any work. No pay given.'
-        Utils:DiscordLog(Config.Logs.WebHook, 'Garbage Run Completed', 15548997, logString)
-    end,
-    NotEnoughWork = function(PlayerSource, PlayerIdentifier)
-        ---@param PlayerSource number Player server id
-        ---@param PlayerIdentifier string Player identifier (citizen id for qb / identifier for esx)
-        --Player completed the run but did a total of less than half the driving and or turned in less garbage bags than there were stops (was not paid)
-
-        local logString = '**(Player: '..PlayerIdentifier..' | ID: '..PlayerSource..')** Completed a garbage route without doing the minimum required work. No pay given.'
-        Utils:DiscordLog(Config.Logs.WebHook, 'Garbage Run Completed', 15105570, logString)
-    end
 }
 
 ------------------------------------------------------CLOTHING----------------------------------------------------------------
