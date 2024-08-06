@@ -10,6 +10,8 @@ Config.CollectionMultiplier = 2 --add this many bags per extra worker
 
 Config.TrashTruck = 'trash2' --spawn code for your desired trash truck
 
+Config.RequireJob = false --'trash' Set a job name if you want to only allow players with that job to do garbage pickup
+
 ---@param vehicle number Vehicle entity id
 Config.SetFuel = function(vehicle)
     if GetResourceState('LegacyFuel') == 'started' then
